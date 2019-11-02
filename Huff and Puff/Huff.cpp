@@ -87,6 +87,7 @@ int main() {
 		sort(huffmanTable.begin(), huffmanTable.end(), compareHuffCell);
 		int originalSize = huffmanTable.size();
 		h = huffmanTable.size() - 1;
+
 		while (h >= 1) {
 			if (huffmanTable[1].frequency <= huffmanTable[2].frequency) {
 				m = 1;
@@ -173,7 +174,6 @@ int main() {
 				}
 			}
 			huffmanTable.pop_back();
-
 			h--;
 		}
 	}
