@@ -78,21 +78,24 @@ int main() {
 			}
 		}
 
-		nextCell.frequency = 1;
+		/*nextCell.frequency = 1;
 		nextCell.glyph = 256;
 		nextCell.leftChild = -1;
 		nextCell.rightChild = -1;
-		huffmanTable.push_back(nextCell);
+		huffmanTable.push_back(nextCell);*/
 
 		sort(huffmanTable.begin(), huffmanTable.end(), compareHuffCell);
 		int originalSize = huffmanTable.size();
 		h = huffmanTable.size() - 1;
-		while (huffmanTable.size() < originalSize * 2 - 1) {
+		while (h >= 1) {
 			if (huffmanTable[1].frequency <= huffmanTable[2].frequency) {
 				m = 1;
 			}
-			else {
+			else if (h != 2) {
 				m = 2;
+			}
+			else {
+				m = 1;
 			}
 
 			huffmanTable.push_back(huffmanTable[m]);
@@ -100,74 +103,76 @@ int main() {
 
 			if (m < h) {
 				huffmanTable[m] = huffmanTable[h];
+				huffmanTable[h].frequency = 0;
 			}
-			else {
 
-			}
 			huffCell temp;
-			for (int i = 0; i < h / 2 + 1; i++) {
-				if (huffmanTable[i * 2 + 1].frequency > huffmanTable[i].frequency && huffmanTable[i * 2 + 2].frequency > huffmanTable[i].frequency) {
+			int leftChild, rightChild;
+			huffmanTable.push_back(temp);
+			for (int cell = 0; cell < h / 2 + 1; cell++) {
+				leftChild = cell * 2 + 1;
+				rightChild = cell * 2 + 2;
+
+				if (huffmanTable[leftChild].frequency >= huffmanTable[cell].frequency && 
+					huffmanTable[rightChild].frequency >= huffmanTable[cell].frequency) {
 					continue;
 				}
-				if (huffmanTable[i * 2 + 1].frequency < huffmanTable[i].frequency && huffmanTable[i * 2 + 2].frequency < huffmanTable[i].frequency) {
-					if (huffmanTable[i*2+1].frequency <= huffmanTable[i*2+2].frequency) {
-						temp = huffmanTable[i];
-						huffmanTable[i] = huffmanTable[i * 2 + 1];
-						huffmanTable[i * 2 + 1] = temp;
-					}
-					else {
-						temp = huffmanTable[i];
-						huffmanTable[i] = huffmanTable[i * 2 + 2];
-						huffmanTable[i * 2 + 2] = temp;
-					}
+
+				if (huffmanTable[cell].frequency > huffmanTable[rightChild].frequency &&
+					(huffmanTable[rightChild].frequency < huffmanTable[leftChild].frequency || huffmanTable[leftChild].frequency == 0) &&
+					huffmanTable[rightChild].frequency != 0) {
+					temp = huffmanTable[cell];
+					huffmanTable[cell] = huffmanTable[rightChild];
+					huffmanTable[rightChild] = temp;
 				}
-				else if (huffmanTable[i * 2 + 1].frequency < huffmanTable[i].frequency) {
-					temp = huffmanTable[i];
-					huffmanTable[i] = huffmanTable[i * 2 + 1];
-					huffmanTable[i * 2 + 1] = temp;
-				}
-				else if (huffmanTable[i * 2 + 2].frequency < huffmanTable[i].frequency) {
-					temp = huffmanTable[i];
-					huffmanTable[i] = huffmanTable[i * 2 + 2];
-					huffmanTable[i * 2 + 2] = temp;
+
+				if (huffmanTable[cell].frequency > huffmanTable[leftChild].frequency &&
+					(huffmanTable[leftChild].frequency <= huffmanTable[rightChild].frequency || huffmanTable[rightChild].frequency == 0) &&
+					huffmanTable[leftChild].frequency != 0) {
+					temp = huffmanTable[cell];
+					huffmanTable[cell] = huffmanTable[leftChild];
+					huffmanTable[leftChild] = temp;
 				}
 			}
+			huffmanTable.pop_back();
 
 			huffmanTable[h] = huffmanTable[0];
+			huffmanTable[0].frequency = 0;
 			temp.frequency = huffmanTable[h].frequency + huffmanTable[m].frequency;
 			temp.glyph = -1;
 			temp.leftChild = h;
-			temp.rightChild = huffmanTable.size();
+			temp.rightChild = huffmanTable.size() - 1;
 
 			huffmanTable[0] = temp;
 
-			for (int i = 0; i < h / 2 + 1; i++) {
-				if (huffmanTable[i * 2 + 1].frequency > huffmanTable[i].frequency && huffmanTable[i * 2 + 2].frequency > huffmanTable[i].frequency) {
+			temp.frequency = 0;
+			huffmanTable.push_back(temp);
+			for (int cell = 0; cell < h / 2 + 1; cell++) {
+				leftChild = cell * 2 + 1;
+				rightChild = cell * 2 + 2;
+
+				if (huffmanTable[leftChild].frequency >= huffmanTable[cell].frequency &&
+					huffmanTable[rightChild].frequency >= huffmanTable[cell].frequency) {
 					continue;
 				}
-				if (huffmanTable[i * 2 + 1].frequency < huffmanTable[i].frequency && huffmanTable[i * 2 + 2].frequency < huffmanTable[i].frequency) {
-					if (huffmanTable[i * 2 + 1].frequency <= huffmanTable[i * 2 + 2].frequency) {
-						temp = huffmanTable[i];
-						huffmanTable[i] = huffmanTable[i * 2 + 1];
-						huffmanTable[i * 2 + 1] = temp;
-					}
-					else {
-						temp = huffmanTable[i];
-						huffmanTable[i] = huffmanTable[i * 2 + 2];
-						huffmanTable[i * 2 + 2] = temp;
-					}
+
+				if (huffmanTable[cell].frequency > huffmanTable[rightChild].frequency &&
+					(huffmanTable[rightChild].frequency < huffmanTable[leftChild].frequency || huffmanTable[leftChild].frequency == 0) &&
+					huffmanTable[rightChild].frequency != 0) {
+					temp = huffmanTable[cell];
+					huffmanTable[cell] = huffmanTable[rightChild];
+					huffmanTable[rightChild] = temp;
 				}
-				else if (huffmanTable[i * 2 + 1].frequency < huffmanTable[i].frequency) {
-					temp = huffmanTable[i];
-					huffmanTable[i] = huffmanTable[i * 2 + 1];
-					huffmanTable[i * 2 + 1] = temp;
-				}
-				else if (huffmanTable[i * 2 + 2].frequency < huffmanTable[i].frequency) {
-					temp = huffmanTable[i];
-					huffmanTable[i] = huffmanTable[i * 2 + 2];
-					huffmanTable[i * 2 + 2] = temp;
+
+				if (huffmanTable[cell].frequency > huffmanTable[leftChild].frequency &&
+					(huffmanTable[leftChild].frequency <= huffmanTable[rightChild].frequency || huffmanTable[rightChild].frequency == 0) &&
+					huffmanTable[leftChild].frequency != 0) {
+					temp = huffmanTable[cell];
+					huffmanTable[cell] = huffmanTable[leftChild];
+					huffmanTable[leftChild] = temp;
 				}
 			}
+			huffmanTable.pop_back();
 
 			h--;
 		}
