@@ -24,4 +24,9 @@
       <Filter>Resource Files</Filter>
     </Text>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Test.huf">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

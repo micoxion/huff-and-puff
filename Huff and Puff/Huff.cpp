@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <bitset>
 
 using std::cin;
 using std::cout;
@@ -12,38 +13,67 @@ using std::fstream;
 using std::ios;
 using std::vector;
 using std::sort;
+using std::bitset;
 
 const int MAX_GLYPH = 256;
 
+struct bitCode {
+	bitCode(int glyph, string code) {
+		this->glyph = glyph;
+		this->code = code;
+	}
+	int glyph;
+	string code;
+};
+
 struct huffCell{
-	huffCell(char glyph = 0, int frequency = 0, int leftChild = 0, int rightChild = 0) {
+	huffCell(int glyph = 0, int frequency = 0, int leftChild = 0, int rightChild = 0) {
 		this->glyph = glyph;
 		this->frequency = frequency;
 		this->leftChild = leftChild;
 		this->rightChild = rightChild;
 	}
-	char glyph;
+	int glyph;
 	int frequency;
 	int leftChild;
 	int rightChild;
 };
+
+void createBitCodes(string& currentCode, const vector<huffCell>& table, vector<bitCode>& bitCodes, int index) {
+	if (table[index].glyph != -1) {
+		bitCode code(table[index].glyph, currentCode);
+		bitCodes.push_back(code);
+		currentCode.pop_back();
+		return;
+	}
+
+	createBitCodes(currentCode += "0", table, bitCodes, table[index].leftChild);
+	createBitCodes(currentCode += "1", table, bitCodes, table[index].rightChild);
+	if (currentCode.length() > 0) 
+		currentCode.pop_back();
+
+}
 
 bool compareHuffCell(huffCell huffCell1, huffCell huffCell2) {
 	return huffCell1.frequency < huffCell2.frequency;
 }
 
 int main() {
-	string fileName;
+	string fileName, fileNameSub;
 	cout << "Name of file to compress: ";
 	cin >> fileName;
 
 	fstream fin(fileName, ios::in | ios::binary);
 
 	if (fileName.find('.') != string::npos) {
-		fileName = fileName.substr(0, fileName.find('.'));
+		fileNameSub = fileName.substr(0, fileName.find('.'));
+	}
+	else {
+		fileNameSub = fileName;
 	}
 
-	fstream fout(fileName + ".huf", ios::out | ios::binary);
+	fstream fout(fileNameSub + ".huf", ios::out | ios::binary);
+
 	if (!fin.is_open()) {
 		cout << "Ah it didn't open darn it";
 	}
@@ -78,11 +108,11 @@ int main() {
 			}
 		}
 
-		/*nextCell.frequency = 1;
+		nextCell.frequency = 1;
 		nextCell.glyph = 256;
 		nextCell.leftChild = -1;
 		nextCell.rightChild = -1;
-		huffmanTable.push_back(nextCell);*/
+		huffmanTable.push_back(nextCell);
 
 		sort(huffmanTable.begin(), huffmanTable.end(), compareHuffCell);
 		int originalSize = huffmanTable.size();
@@ -92,7 +122,7 @@ int main() {
 			if (huffmanTable[1].frequency <= huffmanTable[2].frequency) {
 				m = 1;
 			}
-			else if (h != 2) {
+			else if (h > 2) {
 				m = 2;
 			}
 			else {
@@ -114,22 +144,24 @@ int main() {
 				leftChild = cell * 2 + 1;
 				rightChild = cell * 2 + 2;
 
-				if (huffmanTable[leftChild].frequency >= huffmanTable[cell].frequency && 
+				if (huffmanTable[leftChild].frequency >= huffmanTable[cell].frequency &&
 					huffmanTable[rightChild].frequency >= huffmanTable[cell].frequency) {
 					continue;
 				}
 
+				//check right child
 				if (huffmanTable[cell].frequency > huffmanTable[rightChild].frequency &&
 					(huffmanTable[rightChild].frequency < huffmanTable[leftChild].frequency || huffmanTable[leftChild].frequency == 0) &&
-					huffmanTable[rightChild].frequency != 0) {
+					huffmanTable[rightChild].frequency != 0 && rightChild < h) {
 					temp = huffmanTable[cell];
 					huffmanTable[cell] = huffmanTable[rightChild];
 					huffmanTable[rightChild] = temp;
 				}
 
+				//check left child
 				if (huffmanTable[cell].frequency > huffmanTable[leftChild].frequency &&
 					(huffmanTable[leftChild].frequency <= huffmanTable[rightChild].frequency || huffmanTable[rightChild].frequency == 0) &&
-					huffmanTable[leftChild].frequency != 0) {
+					huffmanTable[leftChild].frequency != 0 && leftChild < h) {
 					temp = huffmanTable[cell];
 					huffmanTable[cell] = huffmanTable[leftChild];
 					huffmanTable[leftChild] = temp;
@@ -139,7 +171,9 @@ int main() {
 
 			huffmanTable[h] = huffmanTable[0];
 			huffmanTable[0].frequency = 0;
-			temp.frequency = huffmanTable[h].frequency + huffmanTable[m].frequency;
+
+			//creating frequency node
+			temp.frequency = huffmanTable[h].frequency + huffmanTable[huffmanTable.size() - 1].frequency;
 			temp.glyph = -1;
 			temp.leftChild = h;
 			temp.rightChild = huffmanTable.size() - 1;
@@ -157,17 +191,19 @@ int main() {
 					continue;
 				}
 
+				//check right child
 				if (huffmanTable[cell].frequency > huffmanTable[rightChild].frequency &&
 					(huffmanTable[rightChild].frequency < huffmanTable[leftChild].frequency || huffmanTable[leftChild].frequency == 0) &&
-					huffmanTable[rightChild].frequency != 0) {
+					huffmanTable[rightChild].frequency != 0 && rightChild < h) {
 					temp = huffmanTable[cell];
 					huffmanTable[cell] = huffmanTable[rightChild];
 					huffmanTable[rightChild] = temp;
 				}
 
+				//check left child
 				if (huffmanTable[cell].frequency > huffmanTable[leftChild].frequency &&
 					(huffmanTable[leftChild].frequency <= huffmanTable[rightChild].frequency || huffmanTable[rightChild].frequency == 0) &&
-					huffmanTable[leftChild].frequency != 0) {
+					huffmanTable[leftChild].frequency != 0 && leftChild < h) {
 					temp = huffmanTable[cell];
 					huffmanTable[cell] = huffmanTable[leftChild];
 					huffmanTable[leftChild] = temp;
@@ -175,6 +211,60 @@ int main() {
 			}
 			huffmanTable.pop_back();
 			h--;
+		}
+		int tableSize = huffmanTable.size();
+		const char* fileNameCStr = fileName.c_str();
+		fout.write((char*)&length, sizeof(length));
+		fout.write((char*)fileNameCStr, sizeof(fileNameCStr));
+		fout.write((char*)&tableSize, sizeof(tableSize));
+
+		vector<bitCode> bitCodes;
+
+		for (huffCell const &cell : huffmanTable) {
+
+			fout.write((char*)&cell.glyph, sizeof(cell.glyph));
+			fout.write((char*)&cell.leftChild, sizeof(cell.leftChild));
+			fout.write((char*)&cell.rightChild, sizeof(cell.rightChild));
+		}
+		string code = "";
+
+		createBitCodes(code, huffmanTable, bitCodes, 0);
+
+		fin.seekg(0, ios::beg);
+		char next;
+		code = "";
+		string compressed = "";
+
+		while (fin.tellg() < length) {
+			fin.read((char*)& next, sizeof(next));
+			for (int i = 0; i < bitCodes.size(); i++) {
+				if (bitCodes[i].glyph == next) {
+					compressed += bitCodes[i].code;
+					break;
+				}
+			}
+		}
+
+		for (int i = 0; i < bitCodes.size(); i++) {
+			if (bitCodes[i].glyph == MAX_GLYPH) {
+				compressed += bitCodes[i].code;
+				break;
+			}
+		}
+
+		while (compressed.length() % 8 != 0) {
+			compressed += "0";
+		}
+
+		string bitsToEncode = "";
+
+		for (int i = 0; i <= compressed.length() - 7; i += 8) {
+			bitsToEncode = compressed.substr(i, 8);
+			bitset<8> encoded(bitsToEncode);
+			unsigned long longConvert = encoded.to_ulong();
+			unsigned char next = static_cast<unsigned char>(longConvert);
+			fout.write((char*)& next, sizeof(next));
+			fout.flush();
 		}
 	}
 
