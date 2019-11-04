@@ -214,7 +214,8 @@ int main() {
 		}
 		int tableSize = huffmanTable.size();
 		const char* fileNameCStr = fileName.c_str();
-		fout.write((char*)&length, sizeof(length));
+		int fileNameLength = fileName.length();
+		fout.write((char*)&fileNameLength, sizeof(fileNameLength));
 		fout.write((char*)fileNameCStr, sizeof(fileNameCStr));
 		fout.write((char*)&tableSize, sizeof(tableSize));
 
