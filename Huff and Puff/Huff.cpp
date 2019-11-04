@@ -75,7 +75,7 @@ int main() {
 	fstream fout(fileNameSub + ".huf", ios::out | ios::binary);
 
 	if (!fin.is_open()) {
-		cout << "Ah it didn't open darn it";
+		cout << "Could not open file... Program closing" << endl;
 	}
 	else {
 		vector<huffCell> huffmanTable;
