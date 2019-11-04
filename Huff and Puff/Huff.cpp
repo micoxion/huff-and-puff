@@ -17,6 +17,7 @@ using std::bitset;
 
 const int MAX_GLYPH = 256;
 
+//associates a glyph with a bitcode
 struct bitCode {
 	bitCode(int glyph, string code) {
 		this->glyph = glyph;
@@ -26,6 +27,7 @@ struct bitCode {
 	string code;
 };
 
+//Represents a huffman table node
 struct huffCell{
 	huffCell(int glyph = 0, int frequency = 0, int leftChild = 0, int rightChild = 0) {
 		this->glyph = glyph;
@@ -39,6 +41,7 @@ struct huffCell{
 	int rightChild;
 };
 
+//recursively trace the huffman table to construct list of bitcodes
 void createBitCodes(string& currentCode, const vector<huffCell>& table, vector<bitCode>& bitCodes, int index) {
 	if (table[index].glyph != -1) {
 		bitCode code(table[index].glyph, currentCode);
@@ -54,17 +57,17 @@ void createBitCodes(string& currentCode, const vector<huffCell>& table, vector<b
 
 }
 
-bool compareHuffCell(huffCell huffCell1, huffCell huffCell2) {
-	return huffCell1.frequency < huffCell2.frequency;
-}
-
 int main() {
+
 	string fileName, fileNameSub;
+
+	//Retrieve fileName from user
 	cout << "Name of file to compress: ";
 	cin >> fileName;
 
 	fstream fin(fileName, ios::in | ios::binary);
 
+	//remove extension if required for out file
 	if (fileName.find('.') != string::npos) {
 		fileNameSub = fileName.substr(0, fileName.find('.'));
 	}
@@ -83,21 +86,25 @@ int main() {
 
 		int glyphFrequencies[MAX_GLYPH]{ 0 };
 		int length = 0;
+		
+		//minimum and end of heap pointers
+		int m, h;
 
-		int m, f, h;
-
+		//getting length of file... do we need this anymore?
 		fin.seekg(0, ios::end);
 		length = fin.tellg();
 		fin.seekg(0, ios::beg);
 
 		char nextGlyph;
 
+		//counting glyph frequencies
 		for (int i = 0; i < length; i++) {
 			fin.read((char*)& nextGlyph, sizeof(nextGlyph));
 
 			glyphFrequencies[nextGlyph]++;
 		}
 
+		//create initial huffman table with glyphs and their frequencies
 		for (int i = 0; i < MAX_GLYPH; i++) {
 			if (glyphFrequencies[i] > 0) {
 				nextCell.frequency = glyphFrequencies[i];
@@ -108,13 +115,15 @@ int main() {
 			}
 		}
 
+		//add eof cell to table
 		nextCell.frequency = 1;
 		nextCell.glyph = 256;
 		nextCell.leftChild = -1;
 		nextCell.rightChild = -1;
 		huffmanTable.push_back(nextCell);
 
-		sort(huffmanTable.begin(), huffmanTable.end(), compareHuffCell);
+		//sort huffmanTable to create minheap using anonymous compare function
+		sort(huffmanTable.begin(), huffmanTable.end(), [](huffCell rc, huffCell lc) -> bool { return rc.frequency < lc.frequency; });
 		int originalSize = huffmanTable.size();
 		h = huffmanTable.size() - 1;
 

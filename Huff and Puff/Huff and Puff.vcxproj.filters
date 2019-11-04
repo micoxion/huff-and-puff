@@ -18,6 +18,9 @@
     <ClCompile Include="Huff.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Puff.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Test.txt">

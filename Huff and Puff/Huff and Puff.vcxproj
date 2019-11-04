@@ -124,6 +124,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Huff.cpp" />
+    <ClCompile Include="Puff.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Test.txt" />
